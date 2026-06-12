@@ -8,8 +8,7 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
-#include <Eigen/Dense>
-#include <opencv2/core/eigen.hpp>
+#include <bit>
 
 namespace conv {
 
@@ -89,14 +88,36 @@ cv::Mat fftConv(const cv::Mat &image, const cv::Mat &kernel) {
      * Step 2: Naively compute DFT using standard formula .
      * Step 3: Implement FFT to compute DFT.
      */
+    cv::Size dftSize(
+        cv::getOptimalDFTSize(image.cols+kernel.cols-1),
+        cv::getOptimalDFTSize(image.rows+kernel.rows-1));
     cv::Mat output;
     cv::Mat imageFreq;
     cv::Mat kernelFreq;
     image.convertTo(imageFreq, CV_32FC1);
     kernel.convertTo(kernelFreq, CV_32FC1);
-    cv::dft(imageFreq, imageFreq);
-    cv::dft(kernelFreq, kernelFreq);
-    return output;
+    cv::copyMakeBorder(
+        imageFreq,
+        imageFreq,
+        0,
+        dftSize.height-image.rows,
+        0,
+        dftSize.width-image.cols,
+        cv::BORDER_CONSTANT);
+    cv::copyMakeBorder(
+        kernelFreq,
+        kernelFreq,
+        0,
+        dftSize.height-kernel.rows,
+        0,
+        dftSize.width-kernel.cols,
+        cv::BORDER_CONSTANT);
+    cv::dft(imageFreq, imageFreq, 0, image.rows);
+    cv::dft(kernelFreq, kernelFreq, 0, kernel.rows);
+    cv::mulSpectrums(imageFreq, kernelFreq, output,0,false);
+    cv::dft(output, output, cv::DFT_INVERSE + cv::DFT_SCALE, image.rows);
+    output.convertTo(output, CV_8UC1);
+    return output(cv::Range(0,image.rows), cv::Range(0, image.cols));
 
 }
 } // namespace conv
