@@ -1,0 +1,3 @@
+namespace queue {
+    class ThreadSafeQueue;
+}

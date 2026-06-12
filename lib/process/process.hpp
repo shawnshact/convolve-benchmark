@@ -1,0 +1,5 @@
+namespace process {
+
+    class VideoProcessor;
+
+}
