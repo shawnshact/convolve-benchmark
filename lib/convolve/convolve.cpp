@@ -8,7 +8,8 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
-#include <bit>
+#include <Eigen/Dense>
+#include <opencv2/core/eigen.hpp>
 
 namespace conv {
 
@@ -88,38 +89,24 @@ cv::Mat fftConv(const cv::Mat &image, const cv::Mat &kernel) {
      * Step 2: Naively compute DFT using standard formula .
      * Step 3: Implement FFT to compute DFT.
      */
-    cv::Size dftSize(
-        cv::getOptimalDFTSize(image.cols+kernel.cols-1),
-        cv::getOptimalDFTSize(image.rows+kernel.rows-1));
     cv::Mat output;
+    cv::Size dftSize;
+    dftSize.width = cv::getOptimalDFTSize(image.cols + kernel.cols - 1);
+    dftSize.height = cv::getOptimalDFTSize(image.rows + kernel.rows - 1);
     cv::Mat imageFreq;
     cv::Mat kernelFreq;
-    image.convertTo(imageFreq, CV_32FC1);
-    kernel.convertTo(kernelFreq, CV_32FC1);
-    cv::copyMakeBorder(
-        imageFreq,
-        imageFreq,
-        0,
-        dftSize.height-image.rows,
-        0,
-        dftSize.width-image.cols,
-        cv::BORDER_CONSTANT);
-    cv::copyMakeBorder(
-        kernelFreq,
-        kernelFreq,
-        0,
-        dftSize.height-kernel.rows,
-        0,
-        dftSize.width-kernel.cols,
-        cv::BORDER_CONSTANT);
+    cv::copyMakeBorder(image, imageFreq, 0, dftSize.height - image.rows, 0, dftSize.width - image.cols, cv::BORDER_CONSTANT);
+    cv::copyMakeBorder(kernel, kernelFreq, 0, dftSize.height - kernel.rows, 0, dftSize.width - kernel.cols, cv::BORDER_CONSTANT);
+    imageFreq.convertTo(imageFreq, CV_32FC1);
+    kernelFreq.convertTo(kernelFreq, CV_32FC1);
     cv::dft(imageFreq, imageFreq, 0, image.rows);
     cv::dft(kernelFreq, kernelFreq, 0, kernel.rows);
-    cv::mulSpectrums(imageFreq, kernelFreq, output,0,false);
+    cv::mulSpectrums(imageFreq, kernelFreq, output, 0);
     cv::dft(output, output, cv::DFT_INVERSE + cv::DFT_SCALE, image.rows);
     output.convertTo(output, CV_8UC1);
-    return output(cv::Range(0,image.rows), cv::Range(0, image.cols));
+    return output.rowRange(0,image.rows).colRange(0, image.cols);
 
 }
 } // namespace conv
 
-#endif // CONVOLVETEST_LIB_CONVOLVE_H_
+#endif // CONVOLVETEST_LIB_CONVOLVE_H_dftSize.height - image.rows, dftS
