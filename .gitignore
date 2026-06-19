@@ -68,3 +68,6 @@ vcpkg_installed/
 images/
 Testing/
 .cache/
+
+# IDE files
+*.idea
