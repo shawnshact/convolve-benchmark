@@ -95,18 +95,24 @@ cv::Mat fftConv(const cv::Mat &image, const cv::Mat &kernel) {
     dftSize.height = cv::getOptimalDFTSize(image.rows + kernel.rows - 1);
     cv::Mat imageFreq;
     cv::Mat kernelFreq;
+
+    // Pad image and kernel with optimal DFT size before convolving.
     cv::copyMakeBorder(image, imageFreq, 0, dftSize.height - image.rows, 0, dftSize.width - image.cols, cv::BORDER_CONSTANT);
     cv::copyMakeBorder(kernel, kernelFreq, 0, dftSize.height - kernel.rows, 0, dftSize.width - kernel.cols, cv::BORDER_CONSTANT);
     imageFreq.convertTo(imageFreq, CV_32FC1);
     kernelFreq.convertTo(kernelFreq, CV_32FC1);
+
+    // Perform DFT, multiply frequencies together, perform IFT
     cv::dft(imageFreq, imageFreq, 0, image.rows);
     cv::dft(kernelFreq, kernelFreq, 0, kernel.rows);
     cv::mulSpectrums(imageFreq, kernelFreq, output, 0);
-    cv::dft(output, output, cv::DFT_INVERSE + cv::DFT_SCALE, image.rows);
-    output.convertTo(output, CV_8UC1);
-    return output.rowRange(0,image.rows).colRange(0, image.cols);
+    cv::dft(output, output, cv::DFT_INVERSE + cv::DFT_SCALE);
 
+    // Crop output and convert to correct type
+    output = output(cv::Rect(kernel.cols/2, kernel.rows/2, image.cols, image.rows));
+    output.convertTo(output, CV_8UC1);
+    return output;
 }
 } // namespace conv
 
-#endif // CONVOLVETEST_LIB_CONVOLVE_H_dftSize.height - image.rows, dftS
+#endif // CONVOLVETEST_LIB_CONVOLVE_H_
