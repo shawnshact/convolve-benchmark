@@ -1,4 +1,6 @@
-add_library(convolve convolve.cpp)
+add_library(convolve convolve.cpp
+        ../buffer/ringbuffer.cpp
+        ../buffer/ringbuffer.hpp)
 add_library(convolve::convolve ALIAS convolve)   # namespaced alias = the standard idiom
 
 target_include_directories(convolve PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
